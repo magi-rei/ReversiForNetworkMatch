@@ -1,6 +1,7 @@
 
 
 
+import java.awt.CardLayout;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -8,7 +9,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 
 
@@ -20,11 +23,14 @@ class TCPClient extends JFrame
 			static int turn = 0;
 			static int stone = 4;
 			static Hand hand = null;
+			
 
 	public TCPClient(String title, BoardState bs) {
 		super(title);
+		
 		panel = new ReversiPanel(bs,turn);
 		panel.addMouseListener(panel.new MouseListener());
+		
 		add(panel);
 	}
 	public static void main(String[] args)

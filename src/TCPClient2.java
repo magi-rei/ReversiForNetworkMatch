@@ -46,7 +46,7 @@ class TCPClient2 extends JFrame
 		//new InetSocketAddress(args[0], Integer.parseInt(args[1]));
 
 		//InetSocketAddress socketAddress = new InetSocketAddress("localhost", 9999);
-		InetSocketAddress socketAddress = new InetSocketAddress("localhost", 8001);
+		InetSocketAddress socketAddress = new InetSocketAddress("localhost", 9999);
 
 		//隣の人にチャットができるか確認してみよう。
 		//InetSocketAddress socketAddress = new InetSocketAddress("133.14.47.131", 8888);

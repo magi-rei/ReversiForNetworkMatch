@@ -15,10 +15,17 @@ import java.net.Socket;
 
 
 
-class TCPServer
+class TCPServer extends Thread
 {
 
     public static void main(String[] args) throws IOException
+    {
+    	TCPServer server = new TCPServer();
+    	server.start();
+    	
+    }
+    
+    public void run()
     {
     	System.out.println("Game Start");
     	ServerSocket[] srvSock = new ServerSocket[2];
@@ -76,8 +83,8 @@ class TCPServer
 			//srvSock[0].close();
 		}
 	}
+    	
     }
-
 
 
 }
