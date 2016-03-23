@@ -138,7 +138,7 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		});
 		addPopupMenuItem("貼り付け", new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				ipAddress.paste();
+				ipField.paste();
 			}
 		});
 	}
