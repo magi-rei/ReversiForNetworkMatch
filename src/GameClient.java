@@ -8,6 +8,8 @@ import java.awt.CardLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -18,13 +20,15 @@ import java.net.Socket;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
 
 
-class GameClient extends JFrame implements ActionListener, Runnable
+class GameClient extends JFrame implements ActionListener, Runnable, MouseListener
 {
 	
 	private static final long serialVersionUID = 1L;
@@ -39,6 +43,8 @@ class GameClient extends JFrame implements ActionListener, Runnable
 			static CardLayout layout;
 			static String ip = null;
 			static JTextField ipField = null;
+			
+			JPopupMenu popup = new JPopupMenu();
 
 	public GameClient(String title) {
 		super(title);
@@ -65,11 +71,12 @@ class GameClient extends JFrame implements ActionListener, Runnable
 		server.setLayout(sLayout);
 		label = new JLabel("以下に表示されるIPアドレスを対戦相手に教えてください");
 		label.setFont(font);
-		JTextField ipAddress = new JTextField();
+		final JTextField ipAddress = new JTextField();
 		GetIp ip = new GetIp();
 		ipAddress.setText(ip.GetIpAddress());
 		ipAddress.setEditable(false);
 		ipAddress.setFont(font);
+		ipAddress.addMouseListener(this);
 		
 		JButton ssButton = new JButton("ゲームスタート");
 		ssButton.addActionListener(this);
@@ -93,6 +100,7 @@ class GameClient extends JFrame implements ActionListener, Runnable
 		label.setFont(font);
 		ipField = new JTextField("",12);
 		ipField.setFont(font);
+		ipField.addMouseListener(this);
 		
 		JButton ccButton = new JButton("ゲームスタート");
 		ccButton.addActionListener(this);
@@ -120,8 +128,29 @@ class GameClient extends JFrame implements ActionListener, Runnable
 		
 		
 		getContentPane().add(cardPanel);
+		
+		//右クリックメニューの追加
+		addPopupMenuItem("コピー", new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				ipAddress.selectAll();
+				ipAddress.copy();
+			}
+		});
+		addPopupMenuItem("貼り付け", new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				ipAddress.paste();
+			}
+		});
 	}
 	
+	private JMenuItem addPopupMenuItem(String name, ActionListener al) {
+		JMenuItem item = new JMenuItem(name);
+		item.addActionListener(al);
+		popup.add(item);
+		return item;
+		
+	}
+
 	public void BoardState(BoardState bs){
 		//ボードの盤面を生成するクラス
 		panel = new ReversiPanel(bs,turn);
@@ -203,7 +232,6 @@ class GameClient extends JFrame implements ActionListener, Runnable
 	    	obj = ois.readObject();
 	    	newBs = (BoardState)(obj);
 	    	System.out.println(newBs);
-	    	Thread.sleep(500);
 	    }
     	bs = newBs;
     	System.out.println("盤面を受け取りました");
@@ -233,11 +261,10 @@ class GameClient extends JFrame implements ActionListener, Runnable
     		break;
     	}
 
-    	//System.out.println("今のターンは"+turn);
+    	//自分のターンかどうか判定し、自分の番ならコマを打つのを許可する
     	if(turn == bs.getCurrentColor()){
     		System.out.println("あなたのターンです");
     		while(true){
-    			Thread.sleep(500);
     			if(panel.getHand()!= hand){
 
     				System.out.println("手を取得");
@@ -245,7 +272,6 @@ class GameClient extends JFrame implements ActionListener, Runnable
     			    	oos = new ObjectOutputStream(socket.getOutputStream());
     			        //データコンテナオブジェクトをクライアントに送信
     			        oos.writeObject(hand);
-    			        Thread.sleep(500);
     			        oos.flush();
     			        oos.close();
     				break;
@@ -272,9 +298,6 @@ class GameClient extends JFrame implements ActionListener, Runnable
 	} catch (ClassNotFoundException e) {
 		// TODO 自動生成された catch ブロック
 		e.printStackTrace();
-	} catch (InterruptedException e) {
-		// TODO 自動生成された catch ブロック
-		e.printStackTrace();
 	}
 	}
 	public void actionPerformed(ActionEvent e){
@@ -297,6 +320,35 @@ class GameClient extends JFrame implements ActionListener, Runnable
 	    	if(ipField.getText() !=null)
 	    	thread.start();
 	    }
-	    System.out.println("ボタンが押されました");
 	  }
+	
+	public void mouseClicked(MouseEvent e){
+		  if(javax.swing.SwingUtilities.isRightMouseButton(e)){
+			  popup.show(e.getComponent(), e.getX(), e.getY());
+		  }
+		}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
 }

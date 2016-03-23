@@ -11,6 +11,10 @@ import javax.swing.JPanel;
 import javax.swing.event.MouseInputAdapter;
 
 public class ReversiPanel extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int width; // ウィンドウサイズの幅
 	private int height; // ウィンドウサイズの高さ
 	private int boxWidth; // 1マスの幅
