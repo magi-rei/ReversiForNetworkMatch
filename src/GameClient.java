@@ -1,5 +1,5 @@
 /**ネットワーク対戦型リバーシ
-* 
+*
 */
 
 
@@ -30,7 +30,7 @@ import javax.swing.SpringLayout;
 
 class GameClient extends JFrame implements ActionListener, Runnable, MouseListener
 {
-	
+
 	private static final long serialVersionUID = 1L;
 	private static Thread thread;
 			//盤面のクラスを用意
@@ -43,7 +43,12 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 			static CardLayout layout;
 			static String ip = null;
 			static JTextField ipField = null;
-			
+			JTextField ipAddress = null;
+
+	int mode ;
+	private static int SERVER = 0;
+	private static int CLIENT = 1;
+
 			JPopupMenu popup = new JPopupMenu();
 
 	public GameClient(String title) {
@@ -51,7 +56,7 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		Font font = new Font("", Font.PLAIN, 20);
 		JPanel menu = new JPanel();
 		menu.setLayout(new BorderLayout());
-		JLabel label = new JLabel("あなたはどちら側でプレイしますか？");
+		JLabel label = new JLabel("あなたはどっち？");
 		label.setHorizontalAlignment(JLabel.CENTER);
 		label.setFont(font);
 		JButton sBtn = new JButton("サーバー側（黒）");
@@ -65,24 +70,24 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		menu.add(label,BorderLayout.CENTER);
 		menu.add(sBtn, BorderLayout.LINE_START);
 		menu.add(cBtn,BorderLayout.LINE_END);
-		
+
 		SpringLayout sLayout = new SpringLayout();
 		JPanel server = new JPanel();
 		server.setLayout(sLayout);
 		label = new JLabel("以下に表示されるIPアドレスを対戦相手に教えてください");
 		label.setFont(font);
-		final JTextField ipAddress = new JTextField();
+		ipAddress = new JTextField();
 		GetIp ip = new GetIp();
 		ipAddress.setText(ip.GetIpAddress());
 		ipAddress.setEditable(false);
 		ipAddress.setFont(font);
 		ipAddress.addMouseListener(this);
-		
+
 		JButton ssButton = new JButton("ゲームスタート");
 		ssButton.addActionListener(this);
 		ssButton.setActionCommand("serverStart");
 		ssButton.setFont(font);
-		
+
 		sLayout.putConstraint(SpringLayout.NORTH, label, 50, SpringLayout.NORTH, server);
 		//sLayout.putConstraint(SpringLayout.WEST, label, 333-label.getWidth()/2, SpringLayout.NORTH, server);
 		sLayout.putConstraint(SpringLayout.NORTH, ipAddress, 100, SpringLayout.NORTH, label);
@@ -92,43 +97,43 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		server.add(label);
 		server.add(ipAddress);
 		server.add(ssButton);
-		
+
 		sLayout = new SpringLayout();
 		JPanel client = new JPanel();
 		client.setLayout(sLayout);
 		label = new JLabel("以下に対戦相手のIPアドレスを入力してください");
 		label.setFont(font);
-		ipField = new JTextField("",12);
+		ipField = new JTextField("localhost",12);
 		ipField.setFont(font);
 		ipField.addMouseListener(this);
-		
+
 		JButton ccButton = new JButton("ゲームスタート");
 		ccButton.addActionListener(this);
 		ccButton.setActionCommand("clientStart");
 		ccButton.setFont(font);
-		
+
 		sLayout.putConstraint(SpringLayout.NORTH, label, 50, SpringLayout.NORTH, client);
 		//sLayout.putConstraint(SpringLayout.WEST, label, 333-label.getWidth()/2, SpringLayout.NORTH, client);
 		sLayout.putConstraint(SpringLayout.NORTH, ipField, 100, SpringLayout.NORTH, label);
 		//sLayout.putConstraint(SpringLayout.WEST, ipField, 333-ipField.getWidth()/2, SpringLayout.NORTH, client);
 		sLayout.putConstraint(SpringLayout.NORTH, ccButton, 100, SpringLayout.NORTH, ipField);
 		//sLayout.putConstraint(SpringLayout.WEST, ccButton, 333-ipField.getWidth()/2, SpringLayout.NORTH, client);
-		
+
 		client.add(label);
 		client.add(ipField);
 		client.add(ccButton);
-		
+
 		cardPanel = new JPanel();
 		layout = new CardLayout();
 		cardPanel.setLayout(layout);
-		
+
 		cardPanel.add(menu,"menu");
 		cardPanel.add(server, "server");
 		cardPanel.add(client, "client");
-		
-		
+
+
 		getContentPane().add(cardPanel);
-		
+
 		//右クリックメニューの追加
 		addPopupMenuItem("コピー", new ActionListener(){
 			public void actionPerformed(ActionEvent e){
@@ -142,13 +147,13 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 			}
 		});
 	}
-	
+
 	private JMenuItem addPopupMenuItem(String name, ActionListener al) {
 		JMenuItem item = new JMenuItem(name);
 		item.addActionListener(al);
 		popup.add(item);
 		return item;
-		
+
 	}
 
 	public void BoardState(BoardState bs){
@@ -163,7 +168,7 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		System.setProperty("awt.useSystemAAFontSettings","on");
 
 		System.setProperty("swing.aatext", "true");
-		
+
 		GameClient tcpC = new GameClient("Reversi");
 		tcpC.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		tcpC.setSize(666, 689);
@@ -172,46 +177,59 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 
 
     }
-	
+
 	public void run(){
 		ObjectOutputStream oos = null;
 
 		ObjectInputStream ois = null;
-	
+		Socket socket = null;
+		Object obj = null;
+ 	    BoardState newBs = null;
+ 	   InetSocketAddress socketAddress;
+
 
 	try {
-		Socket socket;
-		Object obj;
- 	    BoardState newBs;
- 	   InetSocketAddress socketAddress;
-		while(true){
-			if(ip.equals("localhost")){
-				socketAddress = new InetSocketAddress(ip, 9999);
-			}else{
-				socketAddress = new InetSocketAddress(ip, 8001);
-			}
 
 
 
-	    socket = new Socket();
-	    socket.connect(socketAddress, 10000);
+ 	  if(mode == SERVER){
+			socketAddress = new InetSocketAddress(ip, 9999);
+		}else{
+			socketAddress = new InetSocketAddress(ip, 8088);
+		}
 
-	    InetAddress inetadrs;
-	    if ((inetadrs = socket.getInetAddress()) != null) {
+
+ 	 socket = new Socket();
+	  System.out.println(ip);
+
+
+	System.out.println("モードは"+mode);
+	  socket.connect(socketAddress);
+
+	  InetAddress inetadrs;
+	  if ((inetadrs = socket.getInetAddress()) != null) {
 		System.out.println("address:" + inetadrs);
-	    }
-	    else {
+	  }
+	  else {
 		System.out.println("Connection fail");
 		socket.close();
 		return;
-	    }
+	  }
 
 
-	    ois = new ObjectInputStream(socket.getInputStream());
+
+
+System.out.println("InputStreamを開きます"+turn);
+ois = new ObjectInputStream(socket.getInputStream());
+
+oos = new ObjectOutputStream(socket.getOutputStream());
+		while(true){
+
 	    if(turn ==0){
 
 
-	    	turn = (Integer)(ois.readObject());
+	    	turn = mode+1;
+	    	//turn = (Integer)ois.readObject();
 	    	System.out.println("あなたのターンは"+turn);
 	    	//サーバーから、BoardStateクラスをもらう
 	 	    obj = ois.readObject();
@@ -219,35 +237,36 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 	 	    stone = newBs.getBlackStone()+newBs.getWhiteStone();
 	    }else{
 	    	//サーバーから、BoardStateクラスをもらう
-	 	    obj = ois.readObject();
-	 	    newBs = (BoardState)(obj);
+	    	System.out.println("石の数は"+stone);
+	    	while(stone != newBs.getBlackStone()+newBs.getWhiteStone()){
+	    		System.out.println("oisは"+ois.available());
+		    	obj = ois.readObject();
+		    	newBs = (BoardState)(obj);
+		    	System.out.println(1+""+newBs);
+	    	}
+
 	    }
 
 
 
 
-	    System.out.println("石の数は"+stone);
-	    while(!(obj instanceof BoardState) || stone != newBs.getBlackStone()+newBs.getWhiteStone()){
-	    	ois.reset();
-	    	obj = ois.readObject();
-	    	newBs = (BoardState)(obj);
-	    	System.out.println(newBs);
-	    }
+
+
     	bs = newBs;
-    	System.out.println("盤面を受け取りました");
-    	System.out.println(bs);
+    	System.out.println("盤面を受け取りました"+turn);
+
 
 
     	//（最初は）盤面を生成
     	if(panel == null){
-    		System.out.println("盤面を生成");
     		this.BoardState(bs);
     		System.out.println("盤面を生成しました");
 
     	}
 
-    	
+
     		//もらったBoardStateを盤面に反映
+    	System.out.println(2+""+bs);
     		panel.updade(bs);
     		hand = panel.getHand();
 
@@ -263,17 +282,19 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 
     	//自分のターンかどうか判定し、自分の番ならコマを打つのを許可する
     	if(turn == bs.getCurrentColor()){
-    		System.out.println("あなたのターンです");
+    		System.out.println("あなたのターンです"+turn);
     		while(true){
-    			if(panel.getHand()!= hand){
+    			Hand nowHand = panel.getHand();
+    			Thread.sleep(1000);
+    			if(nowHand!= hand){
 
     				System.out.println("手を取得");
-    				hand = panel.getHand();
-    			    	oos = new ObjectOutputStream(socket.getOutputStream());
+    				hand = nowHand;
+
     			        //データコンテナオブジェクトをクライアントに送信
     			        oos.writeObject(hand);
     			        oos.flush();
-    			        oos.close();
+
     				break;
     			}
     		}
@@ -285,43 +306,62 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 
 
 
-    	ois.close();
 
 
 
 		}
+		oos.close();
+		System.out.println("InputStreamを閉じます"+turn);
+    	ois.close();
+    	socket.close();
 
-		socket.close();
+
+
 	}
 	catch (IOException e) {
 	    e.printStackTrace();
 	} catch (ClassNotFoundException e) {
 		// TODO 自動生成された catch ブロック
 		e.printStackTrace();
+	} catch (InterruptedException e) {
+		// TODO 自動生成された catch ブロック
+		e.printStackTrace();
+	}finally{
+		try { // 終わった後の後始末
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
 	}
+
 	}
 	public void actionPerformed(ActionEvent e){
 	    String cmd = e.getActionCommand();
 
 	    if (cmd.equals("server")){
 	    	layout.show(cardPanel, "server");
+	    	mode = SERVER;
+
+	    }else if (cmd.equals("client")){
+	    	layout.show(cardPanel, "client");
+	    	mode = CLIENT;
+
+	    }else if(cmd.equals("serverStart")){
 	    	TCPServer gameServer = new TCPServer();
 	    	gameServer.start();
 	    	ip = "localhost";
-	    }else if (cmd.equals("client")){
-	    	layout.show(cardPanel, "client");
-
-	    }else if(cmd.equals("serverStart")){
 	    	thread.start();
 	    }else if(cmd.equals("clientStart")){
 	    	if(ip == null){
 	    		ip = ipField.getText();
 	    	}
-	    	if(ipField.getText() !=null)
+	    	//if(!ip.equals(null))
 	    	thread.start();
 	    }
 	  }
-	
+
 	public void mouseClicked(MouseEvent e){
 		  if(javax.swing.SwingUtilities.isRightMouseButton(e)){
 			  popup.show(e.getComponent(), e.getX(), e.getY());
@@ -331,24 +371,24 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 	@Override
 	public void mousePressed(MouseEvent e) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 }

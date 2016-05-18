@@ -22,9 +22,9 @@ class TCPServer extends Thread
     {
     	TCPServer server = new TCPServer();
     	server.start();
-    	
+
     }
-    
+
     public void run()
     {
     	System.out.println("Game Start");
@@ -42,7 +42,7 @@ class TCPServer extends Thread
       //その後の通信には、このSocketオブジェクトを使用する。
 	    //int port = Integer.parseInt(args[0]);
 		int port=9999;
-		int port2 = 8001;
+		int port2 = 8088;
 
 	    srvSock[0] = new ServerSocket(port);
 	    srvSock[1] = new ServerSocket(port2);
@@ -83,7 +83,7 @@ class TCPServer extends Thread
 			//srvSock[0].close();
 		}
 	}
-    	
+
     }
 
 
@@ -95,13 +95,15 @@ class TurnThread extends Thread {
 	private static final int BLACK = 1;
 	private static final int WHITE = 2;
 
+
 	  private Socket socket;
-	  private int nowTurn = 0;
+	  private int nowTurn = 1;
 	  private int turn= 0;
 	  private ServerSocket srvSock;
 	  Hand hand = null;
 	  Reversi reversi;
 	    BoardState bs;
+	    BoardState oldBs=null;
 	    ObjectOutputStream oos = null;
 	    ObjectInputStream ois = null;
 
@@ -116,54 +118,57 @@ class TurnThread extends Thread {
 	  }
 
 	  public void run() {
-	    try {
+		  try {
+			  if(socket.isClosed()){
+
+					socket = srvSock.accept();
+
+      	}
 
 
+
+			  oos = new ObjectOutputStream(socket.getOutputStream());
 	        while(true){
 	  	    //　通信処理
 
-	        	if(socket.isClosed()){
-	        		socket = srvSock.accept();
-	        	}
 
 
-
-	          //二人のプレイヤーに、自らの色を教える
-	        	//if(oos == null){
 	        		System.out.println("OutputStreamを生成"+turn);
-	        	oos = new ObjectOutputStream(socket.getOutputStream());
-	        	//}
 
-	          if(nowTurn == 0){
-	        	  //oos = new ObjectOutputStream(socket.getOutputStream());
+
+	        	//二人のプレイヤーに、自らの色を教える
+	          /*if(nowTurn == 0){
 	        	  //データコンテナオブジェクトをクライアントに送信
 	        	  oos.writeObject(turn);
 
 	          	sleep(500);
 	              //oos.close();
-	          	//oos.flush();
+	          	oos.flush();
 	              nowTurn = 1;
 
-	          }
+	          }*/
 
-	          //oos = new ObjectOutputStream(socket.getOutputStream());
+
 	          //データコンテナオブジェクトをクライアントに送信
-	          //oos = new ObjectOutputStream(socket.getOutputStream());
-	          System.out.println(bs.getCurrentColor()+"のターンになりました");
+	          System.out.println(bs.getCurrentColor()+"のターンになりました"+turn);
+
+
+	          //sleep(1000);
+	          oos.reset();
 	          oos.writeObject(bs);
 	          System.out.println(bs+"の盤面を送信しました"+turn);
-	          System.out.println(bs);
-	          sleep(500);
+
 	          if(bs.isEnd()){
 	              	break;
 	              }
-	          //oos.flush();
+
 
 
 
 	              if(turn == nowTurn){
-	            	  //if(ois == null)
-	        	          ois = new ObjectInputStream(socket.getInputStream());
+	            	  if(ois == null)
+	            	  ois = new ObjectInputStream(socket.getInputStream());
+
 
 	            	  System.out.println("手を受け取り待ち"+turn);
 
@@ -180,7 +185,7 @@ class TurnThread extends Thread {
 		      		bs.setWhiteStone(reversi.getWhiteStone());
 		      		bs.setEnd(reversi.isEnd());
 
-		      		 ois.close();
+
 
 
 
@@ -195,25 +200,28 @@ class TurnThread extends Thread {
 
 
 
-	              oos.close();
+
 
 	        }
 
-	        socket.close();
+	        ois.close();
+	        oos.close();
+            socket.close();
+		  }catch (IOException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			}
+
+	        //socket.close();
 
 
 
 
 
-	    } catch (IOException e) {
-	      e.printStackTrace();
-	    } catch (ClassNotFoundException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+
 	  }
 
 	  //もう片方のスレッドでの処理を待つ
