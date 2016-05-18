@@ -133,7 +133,8 @@ public class Reversi {
 
 	public String putStone(int x, int y) {
 		if (reverse(x, y) != 0) {
-			if (blackStone + whiteStone >= (size - 2) * (size - 2)) {
+			if (blackStone + whiteStone >= (size - 2) * (size - 2)
+					|| blackStone ==0 || whiteStone ==0) {
 				isEnd = true;
 			}
 		}

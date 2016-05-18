@@ -34,13 +34,6 @@ class TCPServer extends Thread
     	int turn = 0;
 	try {
 	    // サーバーソケット作成
-      //起動時パラメータからポートを読み取り、
-      //そのポートで接続要求を待つ
-      //ServerSocketクラスはクライアントからの接続を待ち、
-      //srvSock.accept();によって接続したSocketオブジェクト
-      //を返す。
-      //その後の通信には、このSocketオブジェクトを使用する。
-	    //int port = Integer.parseInt(args[0]);
 		int port=9999;
 		int port2 = 8088;
 
@@ -54,7 +47,7 @@ class TCPServer extends Thread
 	    BoardState bs = new BoardState(reversi);
 
 
-	 // 接続待機。接続完了後、次行命令に移る。
+	 // 先攻と後攻それぞれのスレッドを走らせる
 	    for(int i=0;i<2;i++){
 	    	turn++;
 	    	Socket socket = srvSock[i].accept();
@@ -65,7 +58,6 @@ class TCPServer extends Thread
 
 
 	    thread[0].join();
-	    System.out.println("0が終わり");
 	    thread[1].join();
 
 
@@ -78,12 +70,7 @@ class TCPServer extends Thread
 	} catch (InterruptedException e) {
 		// TODO 自動生成された catch ブロック
 		e.printStackTrace();
-	} finally{
-		if(srvSock[0] != null){
-			//srvSock[0].close();
-		}
 	}
-
     }
 
 
@@ -118,6 +105,7 @@ class TurnThread extends Thread {
 	  }
 
 	  public void run() {
+		  //一度だけsocketをつなぐ
 		  try {
 			  if(socket.isClosed()){
 
@@ -135,25 +123,9 @@ class TurnThread extends Thread {
 
 	        		System.out.println("OutputStreamを生成"+turn);
 
-
-	        	//二人のプレイヤーに、自らの色を教える
-	          /*if(nowTurn == 0){
-	        	  //データコンテナオブジェクトをクライアントに送信
-	        	  oos.writeObject(turn);
-
-	          	sleep(500);
-	              //oos.close();
-	          	oos.flush();
-	              nowTurn = 1;
-
-	          }*/
-
-
 	          //データコンテナオブジェクトをクライアントに送信
 	          System.out.println(bs.getCurrentColor()+"のターンになりました"+turn);
 
-
-	          //sleep(1000);
 	          oos.reset();
 	          oos.writeObject(bs);
 	          System.out.println(bs+"の盤面を送信しました"+turn);
@@ -162,9 +134,7 @@ class TurnThread extends Thread {
 	              	break;
 	              }
 
-
-
-
+	          //自分のターンの時のみ、手の入力を受け付ける
 	              if(turn == nowTurn){
 	            	  if(ois == null)
 	            	  ois = new ObjectInputStream(socket.getInputStream());
@@ -197,11 +167,6 @@ class TurnThread extends Thread {
 	              nowTurn = opponentColor(nowTurn);
 
 
-
-
-
-
-
 	        }
 
 	        ois.close();
@@ -214,12 +179,6 @@ class TurnThread extends Thread {
 				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
-
-	        //socket.close();
-
-
-
-
 
 
 	  }
@@ -244,7 +203,7 @@ class TurnThread extends Thread {
 		  System.out.println(bs + "ウェイト"+turn);
 	  }
 
-
+//ターンを引数として与えると、相手のターンを返す
 	  public int opponentColor(int color) {
 			if (color == BLACK) {
 				return WHITE;

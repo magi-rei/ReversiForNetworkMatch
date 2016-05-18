@@ -1,5 +1,5 @@
 /**ネットワーク対戦型リバーシ
-*
+*　山田将大
 */
 
 
@@ -52,6 +52,9 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 			JPopupMenu popup = new JPopupMenu();
 
 	public GameClient(String title) {
+
+		//GUIの設定
+		//CardLayoutを用いて、カードとして管理している
 		super(title);
 		Font font = new Font("", Font.PLAIN, 20);
 		JPanel menu = new JPanel();
@@ -89,11 +92,8 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		ssButton.setFont(font);
 
 		sLayout.putConstraint(SpringLayout.NORTH, label, 50, SpringLayout.NORTH, server);
-		//sLayout.putConstraint(SpringLayout.WEST, label, 333-label.getWidth()/2, SpringLayout.NORTH, server);
 		sLayout.putConstraint(SpringLayout.NORTH, ipAddress, 100, SpringLayout.NORTH, label);
-		//sLayout.putConstraint(SpringLayout.WEST, ipAddress, 333-ipAddress.getWidth()/2, SpringLayout.NORTH, server);
 		sLayout.putConstraint(SpringLayout.NORTH, ssButton, 100, SpringLayout.NORTH, ipAddress);
-		//sLayout.putConstraint(SpringLayout.WEST, ssButton, 333-ssButton.getWidth()/2, SpringLayout.NORTH, server);
 		server.add(label);
 		server.add(ipAddress);
 		server.add(ssButton);
@@ -101,7 +101,8 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		sLayout = new SpringLayout();
 		JPanel client = new JPanel();
 		client.setLayout(sLayout);
-		label = new JLabel("以下に対戦相手のIPアドレスを入力してください");
+		label = new JLabel("<html>以下に対戦相手のIPアドレスを入力してください"
+				+ "<br>同じPCでプレイするときはそのままゲームをスタートしてください");
 		label.setFont(font);
 		ipField = new JTextField("localhost",12);
 		ipField.setFont(font);
@@ -113,11 +114,8 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 		ccButton.setFont(font);
 
 		sLayout.putConstraint(SpringLayout.NORTH, label, 50, SpringLayout.NORTH, client);
-		//sLayout.putConstraint(SpringLayout.WEST, label, 333-label.getWidth()/2, SpringLayout.NORTH, client);
 		sLayout.putConstraint(SpringLayout.NORTH, ipField, 100, SpringLayout.NORTH, label);
-		//sLayout.putConstraint(SpringLayout.WEST, ipField, 333-ipField.getWidth()/2, SpringLayout.NORTH, client);
 		sLayout.putConstraint(SpringLayout.NORTH, ccButton, 100, SpringLayout.NORTH, ipField);
-		//sLayout.putConstraint(SpringLayout.WEST, ccButton, 333-ipField.getWidth()/2, SpringLayout.NORTH, client);
 
 		client.add(label);
 		client.add(ipField);
@@ -219,10 +217,11 @@ class GameClient extends JFrame implements ActionListener, Runnable, MouseListen
 
 
 
-System.out.println("InputStreamを開きます"+turn);
-ois = new ObjectInputStream(socket.getInputStream());
 
-oos = new ObjectOutputStream(socket.getOutputStream());
+	  System.out.println("InputStreamを開きます"+turn);
+	  ois = new ObjectInputStream(socket.getInputStream());
+	  oos = new ObjectOutputStream(socket.getOutputStream());
+
 		while(true){
 
 	    if(turn ==0){
@@ -326,20 +325,13 @@ oos = new ObjectOutputStream(socket.getOutputStream());
 	} catch (InterruptedException e) {
 		// TODO 自動生成された catch ブロック
 		e.printStackTrace();
-	}finally{
-		try { // 終わった後の後始末
-            if (socket != null) {
-                socket.close();
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 	}
 
 	}
 	public void actionPerformed(ActionEvent e){
 	    String cmd = e.getActionCommand();
 
+	    //GUIでの遷移を管理する
 	    if (cmd.equals("server")){
 	    	layout.show(cardPanel, "server");
 	    	mode = SERVER;
